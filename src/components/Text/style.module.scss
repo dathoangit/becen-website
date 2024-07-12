@@ -1,0 +1,41 @@
+@import '../../styles/abstracts/variables';
+
+.text {
+  font-size: 16px;
+
+  &.textHeader {
+    font-family: 'WhyteInktrap';
+  }
+
+  &.textGrey {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  &.textWhite {
+    color: #fff;
+  }
+
+  &.textYellow {
+    color: #FFD44D !important;
+  }
+
+  &.textGreen {
+    color: #30E0A1 !important;
+  }
+
+  &.textPrimary {
+    color: #000;
+  }
+
+  &.textGradient {
+    background: -webkit-linear-gradient(305deg, #00C2FF, #0077ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  &.textLink {
+    color: $color-primary;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}

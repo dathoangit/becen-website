@@ -1,0 +1,39 @@
+@import "../abstracts/variables";
+
+.text-center {
+  text-align: center
+}
+
+.bg {
+  &-success {
+    background: $color-success
+  }
+  &-warning {
+    background: $color-warning
+  }
+}
+
+.button {
+  &-success {
+    background: $color-success;
+
+    &:hover {
+      background: $color-success-hover !important;
+    }
+  }
+
+  &-warning {
+    background: $color-warning;
+
+    &:hover {
+      background: $color-warning-hover !important;;
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  .-md\:translate-x-1\/2 {
+    --tw-translate-x: -50%;
+    //transform: translateX(-50%) !important;
+  }
+}

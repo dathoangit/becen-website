@@ -1,0 +1,22 @@
+@import 'src/styles/abstracts/mixins';
+.logo {
+  width: 9rem;
+  height: 3rem;
+}
+
+.CgMenuLeft {
+  width: 3rem;
+  height: 3rem;
+}
+
+@media (min-width: 768px) {
+  .logo {
+    width: 9rem;
+    height: 3rem;
+  }
+
+  .CgMenuLeft {
+    width: 2rem;
+    height: 2rem;
+  }
+}

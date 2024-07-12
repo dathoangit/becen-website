@@ -1,0 +1,32 @@
+@import 'src/styles/abstracts/mixins';
+
+.text_outline {
+  color: transparent;
+  -webkit-text-stroke: 1px #F2CD04;
+  position: relative;
+}
+
+.text_outline::before {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: yellow;
+  -webkit-text-stroke: 0;
+  z-index: -1;
+}
+
+@media (min-width: 768px) {
+  .text_outline {
+    color: transparent;
+    -webkit-text-stroke: 3px #F2CD04;
+    position: relative;
+  }
+}
+
+@media (min-width: 992px) {
+
+}
+
+@media (min-width: 1024px) {
+}

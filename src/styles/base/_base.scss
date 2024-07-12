@@ -1,0 +1,46 @@
+@import '../abstracts/variables';
+
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  padding-left: 10rem;
+  padding-right: 12rem;
+
+  @include respond(phone) {
+    padding: 2.2rem;
+  }
+}
+
+:where(.css-dev-only-do-not-override-ixblex).ant-menu-horizontal {
+  border-bottom: none;
+}
+
+:where(.css-dev-only-do-not-override-ixblex).ant-menu-light.ant-menu-horizontal
+  > .ant-menu-item-selected::after,
+:where(.css-dev-only-do-not-override-ixblex).ant-menu-light.ant-menu-horizontal
+  > .ant-menu-submenu-selected::after {
+  border-bottom: none;
+}
+
+:where(.css-dev-only-do-not-override-ixblex).ant-menu-light.ant-menu-horizontal
+  > .ant-menu-item:hover::after {
+  border-bottom: none;
+}
+
+
+.ant-menu-item-selected{
+  background-color: transparent !important;
+}
+
+.dark .ant-modal-content{
+  background-color: #555555;
+}
+.light .ant-modal-content{
+  background-color: #F1F2F4;
+}

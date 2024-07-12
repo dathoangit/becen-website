@@ -1,0 +1,150 @@
+name: NextJs API CI
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '*-[0-9]+.[0-9]+.[0-9]+*'
+      - '[0-9]+.[0-9]+.[0-9]+*'
+      - 'version-*'
+      - 'tag-*'
+      - 'staging-*'
+      - 'test2-*'
+      - 'test-*'
+      - 'Release-*'
+      - 'release-*'
+
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+  release:
+    types:
+      - created
+
+jobs:
+  deploy:
+    runs-on: [ubuntu-latest]
+    env:
+      CI: false
+      DEPLOY_HOST: '194.233.93.0'
+      DEPLOY_PATH: '/var/www'
+      DOMAIN: 'becen.me'
+      NODE_OPTIONS: '--max-old-space-size=4000'
+      TELE_CHAT_ID: '-804821265'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set ssh agent
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.TECH_PRIVATE_KEY }}
+
+      - name: Parse tag
+        uses: olegtarasov/get-tag@v2.1
+        id: tagName
+        with:
+          tagRegex: '(?<package>.*)-(?<version>.*)'
+
+      - name: Setup Development env for Test site
+        if: '${{ github.event.pull_request.merged != true }}'
+        run: |
+          echo "DOMAIN=$TEST_DOMAIN" >> $GITHUB_ENV
+        env:
+          TEST_DOMAIN: 'becen.me'
+
+      - name: Setup Production env for prod site
+        if: "${{ github.base_ref == 'main' && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}"
+        run: |
+          echo "DOMAIN=$PROD_DOMAIN" >> $GITHUB_ENV
+        env:
+          PROD_DOMAIN: 'becen.me'
+
+      - name: coppy code to server
+        run: |
+          rsync -e "ssh -o StrictHostKeyChecking=no" -avz --no-perms --no-owner --no-group ./ root@${DEPLOY_HOST}:${DEPLOY_PATH}/${DOMAIN}
+
+      # - name: Setup Development env for Test site
+      #   if: "${{ github.event.pull_request.merged != true && steps.tagName.outputs.package == 'test' }}"
+      #   run: |
+      #     cp .env.development .env.production
+      #     echo "DOMAIN=$DEV_DOMAIN" >> $GITHUB_ENV
+      #     echo "DEPLOY_HOST=$DEPLOY_HOST" >> $GITHUB_ENV
+      #     echo "TELE_CHAT_ID=$DEV_TELE_CHAT_ID" >> $GITHUB_ENV
+      #   env:
+      #     DEV_DOMAIN: "test-app.onedex.io"
+      #     DEPLOY_HOST: "109.123.235.21"
+      #     DEV_TELE_CHAT_ID: "-851815980"
+      #      - name: Log in to Docker Hub
+      #        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      #        with:
+      #          username: ${{ secrets.DOCKER_USERNAME }}
+      #          password: ${{ secrets.DOCKER_PASSWORD }}
+      #      - name: Extract metadata (tags, labels) for Docker
+      #        id: meta
+      #        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      #        with:
+      #          images: my-docker-hub-namespace/my-docker-hub-repository
+      #      - name: Build and push Docker image
+      #        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+      #        with:
+      #          context: .
+      #          push: true
+      #          tags: blackskin18/zkgap.com:latest
+      - name: executing remote ssh commands using ssh key for production
+        if: "${{ github.base_ref == 'main' && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}"
+        uses: appleboy/ssh-action@master
+        with:
+          host: 194.233.93.0
+          username: root
+          key: ${{ secrets.TECH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/becen.me
+            cp .env.production .env
+            docker compose up -d --build frontend
+      #            docker compose pull frontend && docker compose up -d --build frontend
+      - name: executing remote ssh commands using ssh key for testing
+        if: '${{ github.event.pull_request.merged != true }}'
+        uses: appleboy/ssh-action@master
+        with:
+          host: 194.233.93.0
+          username: root
+          key: ${{ secrets.TECH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/becen.me
+            cp ./.env.production .env
+            docker compose up -d --build frontend
+
+      - name: Get commit branch and commit message
+        run: |
+          echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+          echo "COMMIT_BRANCH=$(echo ${GITHUB_REF##*/})" >> $GITHUB_ENV
+          echo "COMMIT_MESSAGE<<EOF" >> $GITHUB_ENV
+          echo "$(git log --format=%B -n 1 HEAD)" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      # - name: Purge cloudflare cache
+      #   run: |
+      #     chmod +x ./purge-cf-cache.sh
+      #     ./purge-cf-cache.sh $DOMAIN
+      #   env:
+      #     CF_ZONE: ${{ secrets.CF_ZONE }}
+      #     CF_EMAIL: ${{ secrets.CF_EMAIL }}
+      #     CF_API_KEY: ${{ secrets.CF_API_KEY }}
+
+      - name: Send telegram message on completed
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ env.TELE_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TECH_TOKEN }}
+          message: "${{ env.TXT_DETAIL }}\n${{ env.TXT_BRANCH }}\n${{ env.TXT_COMMIT }}\n${{ env.TXT_COMMIT_MSG }}\n${{ env.TXT_PUSHER }}\n${{ env.TXT_DOMAIN }}"
+        env:
+          TXT_DETAIL: '⭐⭐⭐ Deploy ${{ github.event.repository.name }} successful ⭐⭐⭐'
+          TXT_BRANCH: 'Branch: ${{ env.COMMIT_BRANCH }}'
+          TXT_COMMIT: 'Commit: ${{ env.SHORT_SHA }}'
+          TXT_COMMIT_MSG: 'Message: ${{ env.COMMIT_MESSAGE }}'
+          TXT_PUSHER: 'Pusher: ${{ github.event.pusher.name }}'
+          TXT_DOMAIN: 'Domain: ${{ env.DOMAIN }}'
