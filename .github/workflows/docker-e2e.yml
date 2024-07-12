@@ -30,7 +30,7 @@ jobs:
       CI: false
       DEPLOY_HOST: '194.233.93.0'
       DEPLOY_PATH: '/var/www'
-      DOMAIN: 'becen.me'
+      DOMAIN: 'becen.org'
       NODE_OPTIONS: '--max-old-space-size=4000'
       TELE_CHAT_ID: '-804821265'
 
@@ -54,14 +54,14 @@ jobs:
         run: |
           echo "DOMAIN=$TEST_DOMAIN" >> $GITHUB_ENV
         env:
-          TEST_DOMAIN: 'becen.me'
+          TEST_DOMAIN: 'becen.org'
 
       - name: Setup Production env for prod site
         if: "${{ github.base_ref == 'main' && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}"
         run: |
           echo "DOMAIN=$PROD_DOMAIN" >> $GITHUB_ENV
         env:
-          PROD_DOMAIN: 'becen.me'
+          PROD_DOMAIN: 'becen.org'
 
       - name: coppy code to server
         run: |
@@ -102,7 +102,7 @@ jobs:
           username: root
           key: ${{ secrets.TECH_PRIVATE_KEY }}
           script: |
-            cd /var/www/becen.me
+            cd /var/www/becen.org
             cp .env.production .env
             docker compose up -d --build frontend
       #            docker compose pull frontend && docker compose up -d --build frontend
@@ -114,7 +114,7 @@ jobs:
           username: root
           key: ${{ secrets.TECH_PRIVATE_KEY }}
           script: |
-            cd /var/www/becen.me
+            cd /var/www/becen.org
             cp ./.env.production .env
             docker compose up -d --build frontend
 
